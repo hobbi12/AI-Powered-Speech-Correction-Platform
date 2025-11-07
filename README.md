@@ -29,7 +29,7 @@ My role in this project was to develop the front-end interfaces using React.js, 
 
 🚀 Tech Stack
 
-Frontend: React.js, TypeScript, TailwindCSS
+Frontend: React.js,TailwindCSS
 
 Backend: Django REST Framework
 
