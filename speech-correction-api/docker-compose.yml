@@ -1,0 +1,96 @@
+
+services:
+  database:
+    container_name: pronunciation_db
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: pronunciation_db
+      MYSQL_USER: django
+      MYSQL_PASSWORD: django123
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot123"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  phpmyadmin:
+    container_name: pronunciation_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: database
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "8081:80"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+    container_name: pronunciation_backend
+    command: >
+      sh -c "
+        cd /code &&
+        python manage.py makemigrations &&
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - ./pronunciation_api:/code
+    ports:
+      - "9999:8000"
+    environment:
+      MYSQL_DATABASE: pronunciation_db
+      MYSQL_USER: django
+      MYSQL_PASSWORD: django123
+      MYSQL_ROOT_PASSWORD: root123
+    restart: always
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: pronunciation_frontend
+    ports:
+      - "5555:5173"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    restart: always
+    depends_on:
+      - backend
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    command: >
+      sh -c "cd /code && celery -A pronunciation_api.celery worker --loglevel=info"
+    depends_on:
+      - redis
+      - backend
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    volumes:
+      - ./pronunciation_api:/code
+
+volumes:
+  db_data:
