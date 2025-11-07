@@ -2,7 +2,7 @@ This project is an AI-powered speech correction and language learning platform d
 
 Through interactive exercises, learners can listen to words, practice pronouncing them, and receive instant feedback powered by artificial intelligence.
 
-Each letter (in Arabic) includes five progressive levels, guiding users from basic pronunciation to mastery.
+Each letter (in Arabic & in English) includes five progressive levels, guiding users from basic pronunciation to mastery.
 If the pronunciation is correct, the learner automatically advances to the next level — creating a fun and engaging learning experience.
 
 The platform combines:
